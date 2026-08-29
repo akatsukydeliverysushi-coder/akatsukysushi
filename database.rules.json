@@ -1,0 +1,48 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "orders": {
+      ".indexOn": ["createdAt"],
+      "$orderId": {
+        ".read": "auth != null || data.exists()",
+        ".write": "(!data.exists() && auth == null) || (auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator'])",
+        ".validate": "newData.hasChildren(['createdAt','status','customer','items','total']) && newData.child('createdAt').isNumber() && newData.child('total').isNumber() && newData.child('status').val() in ['recebido','preparando','saiu para entrega','entregue']",
+        "status": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator']",
+          ".validate": "newData.val() in ['recebido','preparando','saiu para entrega','entregue']"
+        }
+      }
+    },
+    "settings": {
+      "menu": {
+        ".read": true,
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "storeOpen": {
+        ".read": true,
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".validate": "newData.isBoolean()"
+      },
+      "deliveryFee": {
+        ".read": true,
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      }
+    },
+    "cashClosings": {
+      ".indexOn": ["date"],
+      "$date": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','cashier']",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','cashier'] && ((!data.exists()) || data.child('finalized').val() !== true)",
+        ".validate": "newData.hasChildren(['date','salesTotal','manualInputs','adjustments','closingTotal','expectedCash','difference','orderCount','operator','finalized']) && newData.child('date').isString() && newData.child('salesTotal').isNumber() && newData.child('closingTotal').isNumber() && newData.child('expectedCash').isNumber() && newData.child('difference').isNumber() && newData.child('orderCount').isNumber() && newData.child('finalized').isBoolean() && (!data.exists() || data.child('finalized').val() !== true || newData.child('finalized').val() === true)"
+      }
+    }
+  }
+}
