@@ -1,6 +1,24 @@
 (() => {
   'use strict';
 
+  // Compatibilidade: o index.html antigo observava characterData e alterava
+  // textContent dentro do próprio callback, causando um loop infinito.
+  // Filtramos characterData dos novos observers antes de o observer do index
+  // ser criado. Os observers de imagens usam childList e continuam normais.
+  if (window.MutationObserver && !window.__akatsukyMutationObserverPatched) {
+    const NativeMutationObserver = window.MutationObserver;
+    window.MutationObserver = class AkatsukyMutationObserver extends NativeMutationObserver {
+      observe(target, options) {
+        const safeOptions = Object.assign({}, options, {
+          characterData: false,
+          characterDataOldValue: false
+        });
+        return super.observe(target, safeOptions);
+      }
+    };
+    window.__akatsukyMutationObserverPatched = true;
+  }
+
   // Imagens padrão do cardápio.
   // Se o produto tiver "image" ou "imageUrl" salvo no Firebase,
   // a imagem cadastrada pelo restaurante continua tendo prioridade.
