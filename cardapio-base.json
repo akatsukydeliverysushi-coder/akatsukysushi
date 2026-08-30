@@ -1,0 +1,60 @@
+{
+  "categorias": [
+    {
+      "id": "entradas",
+      "nome": "Entradas",
+      "itens": []
+    },
+    {
+      "id": "temaki",
+      "nome": "Temaki",
+      "itens": []
+    },
+    {
+      "id": "uramaki",
+      "nome": "Uramaki",
+      "itens": []
+    },
+    {
+      "id": "sashimi",
+      "nome": "Sashimi",
+      "itens": []
+    },
+    {
+      "id": "nigiri",
+      "nome": "Nigiri / Nigiri Double",
+      "itens": []
+    },
+    {
+      "id": "joe",
+      "nome": "Joe / Joe Double",
+      "itens": []
+    },
+    {
+      "id": "sobremesas",
+      "nome": "Sobremesas",
+      "itens": []
+    },
+    {
+      "id": "bebidas",
+      "nome": "Bebidas",
+      "itens": []
+    },
+    {
+      "id": "combos",
+      "nome": "Combos",
+      "itens": []
+    },
+    {
+      "id": "barcas",
+      "nome": "Barcas",
+      "itens": []
+    }
+  ],
+  "configuracoes": {
+    "taxaEntrega": 0,
+    "freteGratisAcima": 0,
+    "observacao": ""
+  },
+  "_observacao": "Estrutura preparada para cadastrar os produtos da foto. Os preços ficam editáveis."
+}
