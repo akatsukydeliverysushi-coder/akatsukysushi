@@ -4,6 +4,7 @@
   const DEFAULT_RULES = { aguasDeLindoia: 4, outrasCidades: 8 };
   let rules = { ...DEFAULT_RULES };
   let patched = false;
+  let lastAddressKey = '';
   const listeners = new Set();
 
   const normalize = value => String(value || '')
@@ -12,6 +13,13 @@
     .toLowerCase()
     .trim();
 
+  function getAddressKey() {
+    const city = document.getElementById('city')?.value || '';
+    const uf = document.getElementById('uf')?.value || '';
+    const cep = document.getElementById('cep')?.value || '';
+    return `${normalize(city)}|${normalize(uf)}|${String(cep).replace(/\D/g, '')}`;
+  }
+
   function getFee() {
     const city = document.getElementById('city')?.value || '';
     const uf = normalize(document.getElementById('uf')?.value || '');
@@ -19,7 +27,10 @@
     return Number(isAguas ? rules.aguasDeLindoia : rules.outrasCidades) || 0;
   }
 
-  function notify() {
+  function notify(force = false) {
+    const key = getAddressKey();
+    if (!force && key === lastAddressKey) return;
+    lastAddressKey = key;
     const value = getFee();
     listeners.forEach(fn => { try { fn({ val: () => value }); } catch (e) {} });
     document.dispatchEvent(new CustomEvent('akatsuky:delivery-fee', { detail: { fee: value } }));
@@ -30,9 +41,10 @@
       const el = document.getElementById(id);
       if (!el || el.dataset.deliveryRulesBound) return;
       el.dataset.deliveryRulesBound = '1';
-      el.addEventListener('input', notify);
-      el.addEventListener('change', notify);
+      el.addEventListener('input', () => notify(true));
+      el.addEventListener('change', () => notify(true));
     });
+    notify(true);
   }
 
   function normalizeRules(value) {
@@ -58,7 +70,6 @@
         on: (eventType, callback, cancelCallbackOrContext, context) => {
           listeners.add(callback);
           bindAddress();
-          notify();
           const rulesRef = originalRef.call(this, 'settings/deliveryRules');
           return rulesRef.on(eventType, snap => {
             normalizeRules(snap.val());
@@ -83,12 +94,18 @@
     bindAddress();
     setTimeout(bindAddress, 300);
     setTimeout(bindAddress, 1000);
+    // O Buscar CEP preenche os campos via JavaScript, sem disparar input/change.
+    // Esta verificação detecta a cidade/UF preenchidas e atualiza a taxa automaticamente.
+    setInterval(() => {
+      bindAddress();
+      notify(false);
+    }, 300);
   });
 
   start();
   window.AKATSUKY_DELIVERY_RULES = {
     getFee,
     getRules: () => ({ ...rules }),
-    setRules: value => { normalizeRules(value); notify(); }
+    setRules: value => { normalizeRules(value); notify(true); }
   };
 })();
