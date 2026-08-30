@@ -1,0 +1,6 @@
+NÃO envie o ZIP para dentro do repositório.
+Extraia o ZIP e substitua os arquivos na raiz do repositório.
+Substitua principalmente admin.html, admin.js, style.css, firebase-config.js e troco.js.
+Faça Commit changes e aguarde o GitHub Pages publicar.
+Depois abra o site e pressione Ctrl+F5.
+A página Admin deve mostrar '🍣 Cardápio do Restaurante' e os campos editáveis.
