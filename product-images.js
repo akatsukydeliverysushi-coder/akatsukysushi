@@ -1,19 +1,22 @@
 (() => {
   'use strict';
 
-  // Compatibilidade: o index.html antigo observava characterData e alterava
-  // textContent dentro do próprio callback, causando um loop infinito.
-  // Filtramos characterData dos novos observers antes de o observer do index
-  // ser criado. Os observers de imagens usam childList e continuam normais.
+  // Evita o loop do sincronizador antigo do index.html.
+  // O observer do index altera textContent dentro do proprio callback,
+  // o que dispara outro childList e trava a pagina. Detectamos esse
+  // observer pelo nome syncNav e impedimos que ele seja registrado.
   if (window.MutationObserver && !window.__akatsukyMutationObserverPatched) {
     const NativeMutationObserver = window.MutationObserver;
     window.MutationObserver = class AkatsukyMutationObserver extends NativeMutationObserver {
+      constructor(callback) {
+        const source = String(callback || '');
+        const isNavLoopObserver = source.includes('syncNav');
+        super(isNavLoopObserver ? function(){} : callback);
+        this.__akatsukyDisabled = isNavLoopObserver;
+      }
       observe(target, options) {
-        const safeOptions = Object.assign({}, options, {
-          characterData: false,
-          characterDataOldValue: false
-        });
-        return super.observe(target, safeOptions);
+        if (this.__akatsukyDisabled) return;
+        return super.observe(target, options);
       }
     };
     window.__akatsukyMutationObserverPatched = true;
