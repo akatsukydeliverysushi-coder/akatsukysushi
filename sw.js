@@ -1,14 +1,20 @@
-const CACHE = 'akatsuky-v12';
+const CACHE = 'akatsuky-v13';
 const APP_SHELL = [
   './',
   './index.html',
+  './painel.html',
+  './painel-cardapio.html',
+  './caixa.html',
   './style.css',
   './app.js',
-  './product-images.js',
   './install.js',
+  './painel.js',
+  './painel-cardapio.js',
+  './caixa.js',
   './manifest.json',
   './firebase-config.js',
   './delivery-rules.js',
+  './product-images.js',
   './logo.png'
 ];
 
@@ -33,13 +39,10 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-
   const path = url.pathname.toLowerCase();
   const isPageOrAsset = /\.(html|js|css|json)$/i.test(path) || path.endsWith('/');
-
   if (isPageOrAsset) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
@@ -54,7 +57,6 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-
   event.respondWith(
     fetch(event.request)
       .then(response => {
