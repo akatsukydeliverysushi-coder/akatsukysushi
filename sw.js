@@ -1,9 +1,10 @@
-const CACHE = 'akatsuky-v11';
+const CACHE = 'akatsuky-v12';
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './product-images.js',
   './install.js',
   './manifest.json',
   './firebase-config.js',
@@ -40,8 +41,6 @@ self.addEventListener('fetch', event => {
   const isPageOrAsset = /\.(html|js|css|json)$/i.test(path) || path.endsWith('/');
 
   if (isPageOrAsset) {
-    // Busca sempre a versão mais nova do GitHub Pages.
-    // Nunca transforma painel.html/caixa.html/admin.html em index.html.
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
         .then(response => {
@@ -56,7 +55,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Outros recursos: rede primeiro, cache como fallback.
   event.respondWith(
     fetch(event.request)
       .then(response => {
