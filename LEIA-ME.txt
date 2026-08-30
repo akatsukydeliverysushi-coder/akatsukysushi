@@ -1,0 +1,14 @@
+VERSÃO 5.5 — CORREÇÃO DE CACHE
+
+Substitua no GitHub os arquivos index.html, manifest.json e sw.js por estes.
+Também altere o app.js para a versão 5.5 conforme a correção enviada.
+
+IMPORTANTE:
+- Não coloque o ZIP dentro do site.
+- Extraia os arquivos e substitua os arquivos na RAIZ do repositório.
+- Faça Commit changes.
+- Aguarde o GitHub Pages publicar.
+- Abra o site em janela anônima para o primeiro teste.
+- Não altere o Firebase.
+
+O app.js precisa continuar usando settings/menu como fonte do cardápio.
