@@ -1,22 +1,27 @@
 (() => {
   'use strict';
 
+  // Firebase compat 10.x expõe Reference/Query pelo objeto retornado por ref().
+  // Algumas versões não expõem firebase.database.Reference publicamente.
+  // Por isso pegamos o prototype real e garantimos que get() sempre devolva DataSnapshot.
   function patchFirebaseGet() {
     try {
-      const Ref = window.firebase?.database?.Reference;
-      if (!Ref?.prototype || Ref.prototype.__akatsukyGetFixed) return;
-      const originalGet = Ref.prototype.get;
-      Ref.prototype.get = function (...args) {
-        if (typeof originalGet === 'function') {
-          try {
-            const result = originalGet.apply(this, args);
-            if (result && typeof result.then === 'function') return result.then(snap => snap || this.once('value'));
-            if (result) return Promise.resolve(result);
-          } catch (_) {}
-        }
-        return this.once('value');
+      if (!window.firebase || typeof firebase.database !== 'function') return;
+      const ref = firebase.database().ref('__akatsuky_probe__');
+      const RefProto = Object.getPrototypeOf(ref);
+      if (!RefProto || RefProto.__akatsukyGetFixed) return;
+      const originalGet = RefProto.get;
+      RefProto.get = function (...args) {
+        const self = this;
+        return self.once('value').then(snapshot => {
+          if (snapshot && typeof snapshot.val === 'function') return snapshot;
+          if (typeof originalGet === 'function') {
+            return Promise.resolve(originalGet.apply(self, args)).then(s => s || self.once('value'));
+          }
+          return snapshot;
+        });
       };
-      Ref.prototype.__akatsukyGetFixed = true;
+      RefProto.__akatsukyGetFixed = true;
     } catch (e) { console.warn('Firebase get fallback:', e); }
   }
   function money(n){return Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
