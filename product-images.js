@@ -1,16 +1,17 @@
 (() => {
   'use strict';
 
-  // Imagens padrão para o cardápio. Se o produto tiver "image" ou
-  // "imageUrl" salvo no Firebase, essa imagem personalizada continua tendo prioridade.
+  // Imagens padrão do cardápio.
+  // Se o produto tiver "image" ou "imageUrl" salvo no Firebase,
+  // a imagem cadastrada pelo restaurante continua tendo prioridade.
   const IMAGES = {
-    sushi: 'https://images.unsplash.com/photo-1712183718506-41a054650697?auto=format&fit=crop&w=900&q=80',
-    salmon: 'https://images.unsplash.com/photo-1744360515510-db7bf0f6def8?auto=format&fit=crop&w=900&q=80',
-    platter: 'https://images.unsplash.com/photo-1560689011-2ceb5b1bfcb7?auto=format&fit=crop&w=900&q=80',
-    variety: 'https://images.unsplash.com/photo-1736885978380-8d7d9f7d7880?auto=format&fit=crop&w=900&q=80',
-    rolls: 'https://images.unsplash.com/photo-1583571560096-eb4462cdba30?auto=format&fit=crop&w=900&q=80',
-    dessert: 'https://images.unsplash.com/photo-1675870793010-b73def5d5398?auto=format&fit=crop&w=900&q=80',
-    beer: 'https://images.unsplash.com/photo-1779635593982-de148852cb54?auto=format&fit=crop&w=900&q=80'
+    sushi: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=1000&q=85',
+    salmon: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1000&q=85',
+    platter: 'https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=1000&q=85',
+    variety: 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=1000&q=85',
+    rolls: 'https://images.unsplash.com/photo-1617196034183-421b4917c92d?auto=format&fit=crop&w=1000&q=85',
+    dessert: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=1000&q=85',
+    beer: 'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1000&q=85'
   };
 
   function imageFor(id, category) {
@@ -19,7 +20,7 @@
     if (c.includes('sobremesa')) return IMAGES.dessert;
     if (c.includes('sashimi') || c.includes('nigiri')) return IMAGES.salmon;
     if (c.includes('temaki')) return IMAGES.sushi;
-    if (c.includes('hossomaki') || c.includes('uramaki')) return IMAGES.rolls;
+    if (c.includes('hossomaki') || c.includes('uramaki') || c.includes('hot holl')) return IMAGES.rolls;
     if (c.includes('joe')) return IMAGES.variety;
     if (c.includes('combo') || c.includes('barca')) return IMAGES.platter;
     return [IMAGES.platter, IMAGES.variety, IMAGES.sushi, IMAGES.rolls][Number(id || 1) % 4];
@@ -27,30 +28,40 @@
 
   function addImages() {
     document.querySelectorAll('.product.card').forEach(card => {
-      if (card.querySelector('.productImage')) return;
       const button = card.querySelector('[data-add]');
-      const category = card.querySelector('.catname')?.textContent || '';
       if (!button) return;
+      if (card.querySelector('.productImage')) return;
+
+      const category = card.querySelector('.catname')?.textContent || '';
       const id = button.getAttribute('data-add');
       const img = document.createElement('img');
       img.className = 'productImage';
       img.alt = (card.querySelector('h3')?.textContent || 'Produto Akatsuky').trim();
       img.loading = 'lazy';
       img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
       img.src = imageFor(id, category);
       img.onerror = () => {
-        img.onerror = null;
+        if (img.dataset.fallback === '1') return;
+        img.dataset.fallback = '1';
         img.src = IMAGES.sushi;
       };
+
       const first = card.querySelector('.catname');
       if (first) card.insertBefore(img, first);
       else card.prepend(img);
     });
   }
 
-  const observer = new MutationObserver(addImages);
-  window.addEventListener('DOMContentLoaded', () => {
+  function start() {
     addImages();
+    const observer = new MutationObserver(addImages);
     observer.observe(document.body, { childList: true, subtree: true });
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
 })();
