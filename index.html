@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="icon" href="logo.png">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 <title>Akatsuky Delivery Sushi</title>
 </head>
 <body>
@@ -25,7 +25,7 @@
       <a class="navLink" href="#cardapio">▣ CARDÁPIO</a>
       <a class="navLink promoNav" href="#promocoes">🏷 PROMOÇÕES</a>
       <a class="navLink" href="#tracking">▣ MEUS PEDIDOS</a>
-      <a class="navLink" href="https://wa.me/" target="_blank" rel="noopener">◉ FALE CONOSCO</a>
+      <a class="navLink" href="https://wa.me/5519989860770" target="_blank" rel="noopener">◉ FALE CONOSCO</a>
     </div>
     <button class="navCart" type="button" onclick="document.querySelector('.panel')?.scrollIntoView({behavior:'smooth'})">🛒 <span><b id="navCartCount">0</b> R$ <strong id="navCartTotal">0,00</strong><small>VER CARRINHO</small></span></button>
   </nav>
@@ -45,15 +45,12 @@
     <div><span>◉</span><strong>ATENDIMENTO<small>Fale conosco pelo<br>WhatsApp</small></strong></div>
   </div>
 </header>
-
 <main class="wrap">
   <div id="connection" class="notice">Conectando ao sistema...</div>
-
   <section id="promocoes" class="featuredSection hidden">
     <div class="section-title"><div><h2>🔥 Promoções em destaque</h2><div class="sub">Ofertas especiais selecionadas pelo restaurante.</div></div></div>
     <div id="featured" class="featuredGrid"></div>
   </section>
-
   <section id="cardapio">
     <div class="section-title">
       <div><h2>Escolha sua categoria</h2><div class="sub">Selecione os produtos e monte seu pedido.</div></div>
@@ -62,7 +59,6 @@
     <div id="cats" class="cats"></div>
     <div id="menu" class="grid"></div>
   </section>
-
   <section class="panel">
     <h2>🛒 Seu pedido <span id="count" class="pill">0 itens</span></h2>
     <div id="cart" class="empty">Carrinho vazio. Adicione produtos acima.</div>
@@ -85,34 +81,16 @@
       <div class="whatsHint">O pedido será salvo no sistema e abrirá o WhatsApp do restaurante.</div>
     </form>
   </section>
-
   <section id="tracking" class="panel tracking hidden"><h2>📦 Acompanhar pedido</h2><div id="trackingBox"></div></section>
 </main>
-
-<div id="install" class="install">
-  <div>📲</div><div><b>Baixar / instalar o app</b><small>Use o Akatsuky Sushi como aplicativo.</small></div>
-  <button id="installBtn">BAIXAR APP</button>
-</div>
+<div id="install" class="install"><div>📲</div><div><b>Baixar / instalar o app</b><small>Use o Akatsuky Sushi como aplicativo.</small></div><button id="installBtn">BAIXAR APP</button></div>
 <footer>Akatsuky Delivery Sushi • Sistema próprio de pedidos</footer>
-
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-<script src="firebase-config.js?v=3"></script>
-<script src="delivery-rules.js?v=3"></script>
-<script src="app.js?v=12"></script>
-<script src="product-images.js?v=12"></script>
-<script src="install.js?v=12"></script>
-<script>
-(function(){
-  function syncNav(){
-    const c=document.getElementById('count');
-    const t=document.getElementById('total');
-    if(c) document.getElementById('navCartCount').textContent=(c.textContent.match(/\d+/)||['0'])[0];
-    if(t) document.getElementById('navCartTotal').textContent=t.textContent.replace(/^R\$\s*/,'');
-  }
-  new MutationObserver(syncNav).observe(document.body,{subtree:true,childList:true,characterData:true});
-  document.addEventListener('DOMContentLoaded',syncNav);
-})();
-</script>
+<script src="firebase-config.js?v=4"></script>
+<script src="delivery-rules.js?v=4"></script>
+<script src="app.js?v=13"></script>
+<script src="product-images.js?v=13"></script>
+<script src="install.js?v=13"></script>
 </body>
 </html>
