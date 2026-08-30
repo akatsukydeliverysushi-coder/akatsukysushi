@@ -1,0 +1,3 @@
+Cardápio cadastrado a partir da foto enviada pelo usuário.
+Categorias: Entradas, Temaki, Hot Holl, Hossomaki, Uramaki, Sashimi, Nigiri Double, Nigiri, Joe Double, Joe, Sobremesas, Bebidas, Combos e Barcas.
+Taxa visível na foto: Cidade R$4,00; Fora da cidade R$7,00. O campo existente no app usa uma taxa única; deixe R$4,00 como padrão e ajuste conforme a entrega.

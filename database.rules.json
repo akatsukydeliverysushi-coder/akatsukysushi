@@ -20,6 +20,14 @@
         }
       }
     },
+    "ordersHistory": {
+      "$date": {
+        "$orderId": {
+          ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator','cashier']",
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','cashier']"
+        }
+      }
+    },
     "settings": {
       "menu": {
         ".read": true,

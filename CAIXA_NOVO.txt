@@ -1,0 +1,10 @@
+NOVA ROTINA DE CAIXA
+
+Ao clicar em FINALIZAR E BLOQUEAR CAIXA:
+1. O fechamento do dia é gravado e bloqueado.
+2. Os pedidos ativos são arquivados em ordersHistory/AAAA-MM-DD/.
+3. Os pedidos ativos são removidos de orders/.
+4. O painel de pedidos volta para 0 e fica pronto para receber um novo caixa.
+5. O histórico do caixa continua em cashClosings/.
+
+IMPORTANTE: publique também o database.rules.json atualizado.
