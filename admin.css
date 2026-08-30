@@ -1,0 +1,156 @@
+
+/* AKATSUKY DELIVERY SUSHI — PAINEL ADMINISTRATIVO */
+:root{
+  --bg:#0d0c11;--panel:#17151d;--panel2:#1e1b25;--border:#302b38;
+  --text:#f7f4f8;--muted:#aaa3b0;--red:#e50920;--red2:#ff3045;
+  --green:#16c784;--yellow:#f2b84b;--shadow:0 14px 40px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top,#211b27 0,#0d0c11 55%);color:var(--text)}
+body{font-size:15px}
+img{max-width:100%}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* Cabeçalho */
+header,.header,.topbar,.hero{position:relative}
+header,.header,.topbar{
+  width:100%;min-height:92px;padding:18px 28px;
+  display:flex;align-items:center;gap:18px;
+  background:rgba(13,12,17,.94);border-bottom:1px solid var(--border);
+}
+header img,.header img,.topbar img{width:64px!important;height:64px!important;object-fit:contain;border-radius:14px}
+.brand img{width:76px!important;height:76px!important}
+h1,h2,h3{line-height:1.15}
+h1{margin:0;font-size:28px}
+h2{font-size:24px;margin:0 0 8px}
+h3{font-size:18px;margin:12px 0}
+p{color:var(--muted);line-height:1.5}
+
+/* Conteúdo principal */
+main,.wrap,.container,.admin-wrap{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 60px}
+#dashboard,#cashPanel{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:24px 0 60px}
+
+/* conexão */
+.notice{padding:13px 16px;border:1px solid var(--border);border-radius:12px;background:var(--panel);margin-bottom:20px}
+.notice.ok{border-color:rgba(22,199,132,.55);color:#8ff1c8}
+.notice.warn{border-color:rgba(242,184,75,.55);color:#ffd98d}
+.notice.error{border-color:rgba(229,9,32,.55);color:#ff8995}
+
+/* Login */
+#login,#cashLogin{
+  width:min(440px,calc(100% - 32px));margin:70px auto;padding:30px;
+  background:linear-gradient(180deg,#1d1922,#141219);border:1px solid var(--border);
+  border-radius:22px;box-shadow:var(--shadow);text-align:center;
+}
+#login img,#cashLogin img{width:110px!important;height:110px!important;object-fit:contain;border-radius:22px;margin-bottom:14px}
+#login input,#cashLogin input,#login select,#cashLogin select{
+  width:100%;padding:13px 14px;margin:7px 0 12px;background:#0f0e13;color:var(--text);
+  border:1px solid #3a3542;border-radius:11px;outline:none;
+}
+#login input:focus,#cashLogin input:focus{border-color:var(--red)}
+#login button,#cashLogin button{width:100%;padding:13px 16px;border:0;border-radius:11px;background:var(--red);color:white;font-weight:800}
+#login button:hover,#cashLogin button:hover{background:var(--red2)}
+
+/* Barra de ações */
+.toolbar,.actions,.top-actions{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;
+}
+.toolbar button,.actions button,.top-actions button{
+  border:1px solid #3b3542;background:#211e27;color:#f4f0f5;
+  padding:9px 13px;border-radius:9px;font-weight:700;
+}
+.toolbar button:hover,.actions button:hover,.top-actions button:hover{border-color:#716778;transform:translateY(-1px)}
+#storeToggle:not(.closed){background:rgba(22,199,132,.12);border-color:rgba(22,199,132,.5);color:#72edb9}
+#storeToggle.closed{background:rgba(229,9,32,.14);border-color:rgba(229,9,32,.6);color:#ff8c98}
+
+/* Indicadores */
+.stats,.statGrid,.cards{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0;
+}
+.stat,.stat-card,.metric{
+  padding:20px;background:linear-gradient(180deg,#1d1a22,#15131a);
+  border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 25px rgba(0,0,0,.18)
+}
+.stat b,.stat-card b,.metric b{display:block;font-size:28px;margin-top:5px;color:white}
+.stat small,.stat-card small,.metric small{color:var(--muted)}
+
+/* Pesquisa */
+#orderSearch,.search,.filter,input,select,textarea{
+  background:#100f14;color:var(--text);border:1px solid #3a3542;border-radius:10px;
+}
+#orderSearch{padding:11px 13px;width:min(430px,100%)}
+select{padding:10px 12px}
+input,textarea{padding:10px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#777080}
+
+/* Pedidos */
+#orders{display:grid;gap:16px}
+.order{
+  padding:20px;background:linear-gradient(180deg,#1c1921,#15131a);
+  border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)
+}
+.ordertop{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+.status{
+  display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;
+  background:rgba(229,9,32,.14);border:1px solid rgba(229,9,32,.4);
+  color:#ff9aa4;font-size:12px;font-weight:900;text-transform:uppercase
+}
+.orderMeta{color:#9f98a7;font-size:13px;margin-bottom:10px}
+.order hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+.order .actions button.active{background:var(--red);border-color:var(--red);color:#fff}
+.printBtn{background:#fff!important;color:#111!important;border-color:#fff!important}
+
+/* Cardápio */
+.panel,.section,.box,.card{
+  background:linear-gradient(180deg,#1c1921,#15131a);
+  border:1px solid var(--border);border-radius:18px;padding:20px;margin:18px 0;
+}
+.menu-table,.cash-table{width:100%;border-collapse:collapse;overflow:hidden}
+.menu-table th,.menu-table td,.cash-table th,.cash-table td{
+  padding:10px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:left
+}
+.menu-table th,.cash-table th{background:#211e27;color:#ddd6e2;font-size:13px}
+.menu-table input{width:100%;min-width:90px}
+#saveMenu{background:var(--red);color:#fff;border:0;padding:12px 18px;border-radius:10px;font-weight:800;margin-top:14px}
+
+/* Caixa */
+.cash-grid,.form-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px
+}
+.cash-grid label,.form-grid label{display:flex;flex-direction:column;gap:6px;color:#c9c2cf;font-weight:700}
+.cash-summary{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0
+}
+.cash-summary>div{
+  padding:15px;border-radius:13px;background:#201d26;border:1px solid var(--border)
+}
+.cash-summary b{display:block;font-size:20px;margin-top:5px}
+#saveCash{background:#16a978;color:white;border:0;padding:11px 16px;border-radius:9px;font-weight:800}
+#finalizeCash{background:#8f1320;color:white;border:0;padding:11px 16px;border-radius:9px;font-weight:800}
+
+/* vazio */
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed #3a3542;border-radius:14px}
+
+/* Responsivo */
+@media(max-width:850px){
+  main,.wrap,.container,.admin-wrap,#dashboard,#cashPanel{width:min(100% - 20px,700px);padding-top:18px}
+  header,.header,.topbar{padding:14px 16px}
+  header img,.header img,.topbar img{width:52px!important;height:52px!important}
+  h1{font-size:22px}
+  .stats,.statGrid,.cards,.cash-summary{grid-template-columns:repeat(2,1fr)}
+  .cash-grid,.form-grid{grid-template-columns:repeat(2,1fr)}
+  .menu-table{display:block;overflow-x:auto;white-space:nowrap}
+}
+@media(max-width:560px){
+  .stats,.statGrid,.cards,.cash-summary,.cash-grid,.form-grid{grid-template-columns:1fr}
+  .order{padding:15px}
+  .ordertop{align-items:flex-start;flex-direction:column}
+  .toolbar button,.actions button,.top-actions button{flex:1 1 auto}
+}
+
+/* Corrige o caso em que o CSS do cliente foi usado no painel */
+body.admin-page .hero,body.admin-page header.hero{min-height:90px}
+body.admin-page .brand{display:flex;align-items:center}
+body.admin-page .brand .ring{display:none}
