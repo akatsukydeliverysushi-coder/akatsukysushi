@@ -7,7 +7,8 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 function msg(text,err=false){$('connection').textContent=text;$('connection').className='notice'+(err?' err':'')}
 function rolePath(uid){return db.ref(`users/${uid}/role`)}
-function isToday(ts){const d=new Date(Number(ts||0));return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===today()}
+// Corrigido: o filtro "Hoje" usa a data local. Antes usava UTC e ocultava pedidos após 21h no Brasil.
+function isToday(ts){const d=new Date(Number(ts||0));if(!Number.isFinite(d.getTime()))return false;const local=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;return local===today()}
 function payment(v){v=String(v||'').toLowerCase();if(v.includes('pix'))return 'PIX';if(v.includes('crédito')||v.includes('credito')||v.includes('cartão')||v.includes('cartao'))return 'Cartão';if(v.includes('débito')||v.includes('debito'))return 'Débito';return 'Dinheiro'}
 function goBack(){if(history.length>1)history.back();else location.href='index.html'}
 function init(){try{if(!window.AKATSUKY_FIREBASE_CONFIG)throw new Error('Firebase config ausente');firebase.initializeApp(window.AKATSUKY_FIREBASE_CONFIG);db=firebase.database();firebase.auth().onAuthStateChanged(async u=>{if(!u){showLogin();return}user=u;try{const snap=await rolePath(u.uid).once('value');const role=String(snap.val()||'').toLowerCase();if(!['admin','operator','cashier'].includes(role)){await firebase.auth().signOut();alert('Usuário sem permissão para o painel.');return}showApp(role)}catch(e){console.error(e);await firebase.auth().signOut();msg('Falha ao verificar a permissão do usuário.',true)}})}catch(e){console.error(e);msg('Erro ao conectar ao Firebase.',true)}}
