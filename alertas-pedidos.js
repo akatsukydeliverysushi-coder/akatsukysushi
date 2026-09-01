@@ -99,9 +99,11 @@ window.addEventListener('DOMContentLoaded', () => {
     return box;
   }
 
+  // Somente pedidos realmente aguardando aceite geram contador e alerta.
+  // 'recebido' significa que o pedido já foi aceito e não deve mais alertar.
   function isWaiting(order) {
     const s=String(order?.status||'').trim().toLowerCase();
-    return s==='aguardando'||s==='recebido'||s==='novo'||s==='pending';
+    return s==='aguardando'||s==='novo'||s==='pending';
   }
 
   function isMesa(order) {
