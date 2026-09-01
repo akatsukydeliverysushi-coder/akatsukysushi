@@ -9,9 +9,9 @@
       }
     },
     "orders": {
-      ".indexOn": ["createdAt"],
+      ".indexOn": ["createdAt", "mesa", "origem"],
       "$orderId": {
-        ".read": "auth != null || data.exists()",
+        ".read": true,
         ".write": "(!data.exists() && auth == null) || (auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator']) || (data.exists() && data.child('origem').val() === 'garcom' && auth == null)",
         ".validate": "newData.hasChildren(['createdAt','status','customer','items','total']) && newData.child('createdAt').isNumber() && newData.child('total').isNumber() && newData.child('status').val() in ['recebido','preparando','saiu para entrega','entregue']",
         "status": {
