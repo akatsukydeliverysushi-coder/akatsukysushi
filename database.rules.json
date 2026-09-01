@@ -10,12 +10,13 @@
     },
     "orders": {
       ".indexOn": ["createdAt", "mesa", "origem"],
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator','garcom']",
       "$orderId": {
-        ".read": true,
-        ".write": "(!data.exists() && auth == null) || (auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator']) || (data.exists() && data.child('origem').val() === 'garcom' && auth == null)",
+        ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator','garcom']",
+        ".write": "(!data.exists() && auth == null) || (auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator']) || (auth != null && root.child('users').child(auth.uid).child('role').val() === 'garcom' && ((!data.exists() && newData.child('origem').val() === 'garcom') || (data.exists() && data.child('origem').val() === 'garcom')))",
         ".validate": "newData.hasChildren(['createdAt','status','customer','items','total']) && newData.child('createdAt').isNumber() && newData.child('total').isNumber() && newData.child('status').val() in ['recebido','preparando','saiu para entrega','entregue']",
         "status": {
-          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator'] || (auth == null && data.child('origem').val() === 'garcom')",
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator'] || (auth != null && root.child('users').child(auth.uid).child('role').val() === 'garcom' && data.parent().child('origem').val() === 'garcom')",
           ".validate": "newData.val() in ['recebido','preparando','saiu para entrega','entregue']"
         }
       }
