@@ -23,29 +23,77 @@ function card(id,o){const c=o.customer||{},items=(o.items||[]).map(x=>`${x.qty}x
 window.setStatus=async(id,status)=>{if(!db||!currentUser||!['admin','operator'].includes(currentRole))return alert('Sem permissão para alterar o pedido.');try{const update={status};update['statusTimes/'+status]=firebase.database.ServerValue.TIMESTAMP;if(status==='entregue')update.deliveredAt=firebase.database.ServerValue.TIMESTAMP;await db.ref('orders/'+id).update(update)}catch(e){console.error(e);alert('Firebase recusou a alteração. Verifique as regras.')}};
 function renderMenuEditor(items){const arr=Array.isArray(items)?items:Object.values(items||{});$('menuEditor').innerHTML=`<table class="menu-table"><thead><tr><th>Categoria</th><th>Produto</th><th>Descrição</th><th>Preço</th></tr></thead><tbody>${arr.map((x,i)=>`<tr><td><input data-i="${i}" data-k="cat" value="${escapeHtml(x.cat)}"></td><td><input data-i="${i}" data-k="name" value="${escapeHtml(x.name)}"></td><td><input data-i="${i}" data-k="desc" value="${escapeHtml(x.desc)}"></td><td><input data-i="${i}" data-k="price" type="number" step="0.01" min="0" value="${Number(x.price||0)}"></td></tr>`).join('')}</tbody></table>`;window.currentMenu=arr.map(x=>({...x}))}
 async function saveCash(){if(!db)return;const date=$('cashDate').value||isoDate();const orders=ordersForDate(date);const existing=(await db.ref('cashClosings/'+date).get()).val();if(existing?.finalized)return alert('Este caixa já foi finalizado e está bloqueado.');const manual={credito:Number($('cashCredito').value||0),debito:Number($('cashDebito').value||0),dinheiro:Number($('cashDinheiro').value||0),pix:Number($('cashPix').value||0)};const adjustments={trocoInicial:Number($('cashTrocoInicial').value||0),suprimento:Number($('cashSuprimento').value||0),sangria:Number($('cashSangria').value||0)};const manualTotal=Object.values(manual).reduce((a,b)=>a+b,0);const sales=orders.reduce((s,[id,o])=>s+Number(o.total||0),0);const expectedCash=orders.reduce((s,[id,o])=>s+(paymentKey(o.customer?.payment)==='dinheiro'?Number(o.total||0):0),0)+adjustments.trocoInicial+adjustments.suprimento-adjustments.sangria;const difference=manualTotal-sales;const data={date,salesTotal:sales,manualInputs:manual,adjustments,closingTotal:manualTotal,expectedCash,difference,orderCount:orders.length,operator:$('cashOperator').value.trim(),finalized:false,savedAt:Date.now()};try{await db.ref('cashClosings/'+date).set(data);currentCash=data;$('cashSaved').textContent=`Caixa de ${dateLabel(date)} salvo em ${new Date().toLocaleString('pt-BR')}.`;renderCashSummary(date,data);await loadCashRange()}catch(e){console.error(e);alert('Não foi possível salvar o fechamento. Verifique as regras do Firebase.')}}
-async function resetOrdersAfterClosing(date,finalData){
-  if(!db||!currentUser)return {count:0};
-  const snap=await db.ref('orders').get();
-  const data=snap.val()||{};
-  const entries=Object.entries(data);
-  if(!entries.length){
-    allOrders=[];lastOrderCount=0;$('statOrders').textContent='0';$('statNew').textContent='0';$('statTotal').textContent=money(0);renderOrders();
+async function resetOrdersAfterClosing(date, finalData){
+  if(!db || !currentUser) return {count:0};
+
+  const snap = await db.ref('orders').get();
+  const data = snap.val() || {};
+  const entries = Object.entries(data);
+
+  const selectedOrders = entries.filter(([id, o]) => {
+    const orderDate = isoDate(new Date(Number(o.createdAt || 0)));
+    return orderDate === date;
+  });
+
+  if(!selectedOrders.length){
+    allOrders = entries;
+    lastOrderCount = entries.length;
+
+    $('statOrders').textContent = entries.length;
+    $('statNew').textContent =
+      entries.filter(([id,o]) => o.status === 'recebido').length;
+
+    $('statTotal').textContent = money(
+      entries.reduce((s,[id,o]) => s + Number(o.total || 0), 0)
+    );
+
+    renderOrders();
+
     return {count:0};
   }
-  const updates={};
-  const closedAt=Date.now();
-  entries.forEach(([id,o])=>{
-    const orderDate=isoDate(new Date(Number(o.createdAt||closedAt)));
-    updates['ordersHistory/'+orderDate+'/'+id]={...o,archivedAt:closedAt,archivedBy:currentUser.uid,archivedWithCashDate:date};
-    updates['orders/'+id]=null;
-  });
-  await db.ref().update(updates);
-  allOrders=[];lastOrderCount=0;
-  $('statOrders').textContent='0';$('statNew').textContent='0';$('statTotal').textContent=money(0);
-  renderOrders();
-  return {count:entries.length};
-}
 
+  const updates = {};
+  const closedAt = Date.now();
+
+  selectedOrders.forEach(([id,o]) => {
+    updates['ordersHistory/' + date + '/' + id] = {
+      ...o,
+      archivedAt: closedAt,
+      archivedBy: currentUser.uid,
+      archivedWithCashDate: date
+    };
+
+    updates['orders/' + id] = null;
+  });
+
+  await db.ref().update(updates);
+
+  const selectedIds = new Set(
+    selectedOrders.map(([id]) => id)
+  );
+
+  const remaining = entries.filter(
+    ([id]) => !selectedIds.has(id)
+  );
+
+  allOrders = remaining;
+  lastOrderCount = remaining.length;
+
+  $('statOrders').textContent = remaining.length;
+
+  $('statNew').textContent =
+    remaining.filter(([id,o]) => o.status === 'recebido').length;
+
+  $('statTotal').textContent = money(
+    remaining.reduce((s,[id,o]) => s + Number(o.total || 0), 0)
+  );
+
+  renderOrders();
+
+  return {
+    count: selectedOrders.length
+  };
+}
 async function finalizeCash(){
   if(!db)return;
   const date=$('cashDate').value||isoDate();
