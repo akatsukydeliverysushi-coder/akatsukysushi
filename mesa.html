@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Akatsuky Mesa</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#fafafa;color:#222}.top{background:#111;color:#fff;padding:18px;text-align:center}.wrap{max-width:760px;margin:auto;padding:18px}.card{background:#fff;border-radius:14px;padding:18px;margin:12px 0;box-shadow:0 2px 10px #0001}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.item{border:1px solid #ddd;border-radius:12px;padding:12px}.item button,button{border:0;border-radius:10px;padding:10px 14px;background:#111;color:#fff;cursor:pointer}.cart{position:sticky;bottom:10px}.muted{color:#666}.ok{padding:12px;border-radius:10px;background:#e8f7e8;color:#176b17;display:none}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+</style>
+</head>
+<body>
+<header class="top"><h1>🍣 Akatsuky</h1><div id="mesa">Pedido na mesa</div></header>
+<main class="wrap">
+<div class="card"><h2>🍽️ Faça seu pedido</h2><p class="muted">Mesa identificada pelo QR Code. Você pode enviar mais de um pedido.</p><div id="produtos" class="grid"></div></div>
+<div class="card"><h2>🛒 Seu pedido</h2><div id="carrinho"></div><div class="row"><strong>Total</strong><strong id="total">R$ 0,00</strong></div><br><button onclick="enviarPedido()">✅ Enviar pedido para o restaurante</button><div id="ok" class="ok">Pedido enviado! Aguarde o restaurante receber.</div></div>
+</main>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, push, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { firebaseConfig } from './firebase-config.js';
+const app=initializeApp(firebaseConfig), db=getDatabase(app);
+const params=new URLSearchParams(location.search); const mesa=params.get('mesa')||'01';
+document.getElementById('mesa').textContent='Mesa '+mesa;
+const produtos=[
+ {nome:'Combo 20 peças',preco:39.90},{nome:'Combo 40 peças',preco:69.90},{nome:'Temaki Salmão',preco:24.90},{nome:'Temaki Filadélfia',preco:25.90},{nome:'Coca-Cola',preco:6.00},{nome:'Água',preco:4.00}
+];
+let cart=[];
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function render(){document.getElementById('produtos').innerHTML=produtos.map((p,i)=>`<div class="item"><b>${p.nome}</b><p>${brl(p.preco)}</p><button onclick="add(${i})">Adicionar</button></div>`).join(''); document.getElementById('carrinho').innerHTML=cart.length?cart.map((p,i)=>`<div class="row"><span>${p.qtd}x ${p.nome}</span><span>${brl(p.preco*p.qtd)} <button onclick="rem(${i})">−</button></span></div>`).join('<hr>'):'<span class="muted">Nenhum item ainda.</span>';document.getElementById('total').textContent=brl(cart.reduce((s,p)=>s+p.preco*p.qtd,0));}
+window.add=i=>{const p=produtos[i],x=cart.find(v=>v.nome===p.nome);x?x.qtd++:cart.push({...p,qtd:1});render()};window.rem=i=>{cart[i].qtd--;if(cart[i].qtd<=0)cart.splice(i,1);render()};
+window.enviarPedido=async()=>{if(!cart.length)return alert('Adicione pelo menos um item.');const total=cart.reduce((s,p)=>s+p.preco*p.qtd,0);try{await push(ref(db,'pedidosMesa'),{mesa,origem:'mesa',status:'aguardando',itens:cart,total,criadoEm:serverTimestamp()});document.getElementById('ok').style.display='block';cart=[];render()}catch(e){alert('Não foi possível enviar o pedido. Verifique a conexão.')}};
+render();
+</script>
+</body></html>
