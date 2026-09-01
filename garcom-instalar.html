@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="garcom-pwa-manifest.json">
+<link rel="icon" href="logo.png">
+<title>Instalar Akatsuky Garçom</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#111;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px}.box{width:min(430px,100%);text-align:center;background:#1b1b1b;border-radius:22px;padding:30px 22px;box-shadow:0 10px 40px #0008}.logo{width:120px;height:120px;object-fit:contain;border-radius:24px;margin-bottom:14px}h1{margin:8px 0;font-size:28px}p{color:#ccc;line-height:1.5}.install{width:100%;padding:16px;border:0;border-radius:14px;background:#c5162e;color:#fff;font-weight:900;font-size:17px}.open{display:block;margin-top:12px;padding:14px;border-radius:14px;background:#333;color:#fff;text-decoration:none;font-weight:800}.hint{font-size:13px;color:#999;margin-top:18px}.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="box">
+<img class="logo" src="logo.png" alt="Akatsuky">
+<h1>🍣 Akatsuky Garçom</h1>
+<p>Instale o aplicativo do garçom na tela inicial do celular para acessar rapidamente as mesas e enviar pedidos ao ADM.</p>
+<button id="installBtn" class="install">📲 INSTALAR APLICATIVO</button>
+<a class="open" href="garcom.html">Abrir Akatsuky Garçom</a>
+<div id="hint" class="hint">Depois da instalação, o app aparecerá na tela inicial do celular.</div>
+</div>
+<script>
+let deferredPrompt=null;
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./garcom-sw.js',{scope:'./'}).catch(()=>{})}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+const btn=document.getElementById('installBtn');
+btn.addEventListener('click',async()=>{
+ if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;return}
+ document.getElementById('hint').textContent='No Android/Chrome, toque no menu ⋮ e escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.';
+});
+window.addEventListener('appinstalled',()=>{btn.textContent='✅ APLICATIVO INSTALADO';btn.disabled=true});
+</script>
+</body>
+</html>
