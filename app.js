@@ -5,7 +5,7 @@ const brl=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const RESTAURANT_WHATSAPP='5519989860770';
 const CART_KEY='akatsukyCart',CUSTOMER_KEY='akatsukyCustomer';
-let menu=[],cart=[],cat='Todos',db=null,searchTerm='',storeOpen=true,deliveryFee=4,deferredPrompt=null;
+let menu=[],cart=[],cat='Todos',db=null,searchTerm='',storeOpen=true,deliveryFee=4,deferredPrompt=null,authUser=null;
 function priceOf(x){const p=Number(x?.promoPrice);return p>0&&p<Number(x?.price||0)?p:Number(x?.price||0)}
 function hasPromo(x){return Number(x?.promoPrice)>0&&Number(x.promoPrice)<Number(x.price||0)}
 function syncTopCart(){const qty=cart.reduce((s,i)=>s+Number(i.q||0),0);const total=cart.reduce((s,i)=>{const x=menu.find(m=>Number(m.id)===Number(i.id));return s+(x?priceOf(x)*Number(i.q||0):0)},0);if($('navCartCount'))$('navCartCount').textContent=qty;if($('navCartTotal'))$('navCartTotal').textContent=total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});if($('count'))$('count').textContent=`${qty} ${qty===1?'item':'itens'}`}
