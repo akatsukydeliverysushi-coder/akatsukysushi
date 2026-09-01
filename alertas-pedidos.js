@@ -9,6 +9,8 @@ window.addEventListener('DOMContentLoaded', () => {
   let db = null;
   let auth = null;
   let audioCtx = null;
+  let alertSoundTimer = null;
+  let waitingCount = 0;
 
   function unlockAudio() {
     try {
@@ -37,6 +39,27 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch (_) {}
   }
 
+  function updateSoundLoop(count) {
+    waitingCount = Number(count || 0);
+    if (waitingCount > 0) {
+      if (!alertSoundTimer) {
+        alertSoundTimer = setInterval(() => {
+          if (waitingCount > 0) sound();
+          else stopSoundLoop();
+        }, 5000);
+      }
+    } else {
+      stopSoundLoop();
+    }
+  }
+
+  function stopSoundLoop() {
+    if (alertSoundTimer) {
+      clearInterval(alertSoundTimer);
+      alertSoundTimer = null;
+    }
+  }
+
   function getDoc(){try{return frame.contentDocument||frame.contentWindow.document}catch(_){return null}}
 
   function ensureAlerts() {
@@ -60,9 +83,9 @@ window.addEventListener('DOMContentLoaded', () => {
       .akAlert small{display:block;color:#9da3b0;font-size:9px;margin-top:3px}
       .akAlert>span{min-width:29px;height:29px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#292e38;font-size:15px;font-weight:900}
       .akAlert.wait{border-color:#ef1731;background:#250a10;animation:akPulse .8s infinite}
-      .akAlert.wait>span{background:#ef1731;color:#fff}
-      .akDelivery.wait>span{background:#2d9cff}
+      .akAlert.wait>span{background:#ef1731;color:#fff;animation:akNumberPulse .8s infinite}
       @keyframes akPulse{50%{transform:scale(1.025);box-shadow:0 0 22px #ef173188}}
+      @keyframes akNumberPulse{50%{transform:scale(1.12)}}
     `;
     doc.head.appendChild(style);
     logout.parentElement?.appendChild(box);
@@ -100,16 +123,17 @@ window.addEventListener('DOMContentLoaded', () => {
     if(!firstSnapshot&&newOrder)sound();
     firstSnapshot=false;
     previousWaiting=ids;
+    updateSoundLoop(waiting.length);
 
     const mesa=box.querySelector('#akMesa'), delivery=box.querySelector('#akDelivery');
     mesa.classList.toggle('wait',mesaRows.length>0);
     delivery.classList.toggle('wait',deliveryRows.length>0);
     mesa.querySelector('span').textContent=mesaRows.length;
     delivery.querySelector('span').textContent=deliveryRows.length;
-    mesa.querySelector('b').textContent=mesaRows.length?'🔔 NOVO PEDIDO DE MESA':'🍽️ PEDIDOS DE MESA';
-    delivery.querySelector('b').textContent=deliveryRows.length?'🔔 NOVO PEDIDO DELIVERY':'🛵 PEDIDOS DELIVERY';
-    mesa.querySelector('small').textContent=mesaRows.length?'AGUARDANDO ACEITE • CLIQUE PARA ABRIR':'Nenhum pedido aguardando';
-    delivery.querySelector('small').textContent=deliveryRows.length?'AGUARDANDO ACEITE • CLIQUE PARA ABRIR':'Nenhum pedido aguardando';
+    mesa.querySelector('b').textContent=mesaRows.length?'🔴 NOVO PEDIDO DE MESA':'🍽️ PEDIDOS DE MESA';
+    delivery.querySelector('b').textContent=deliveryRows.length?'🔴 NOVO PEDIDO DELIVERY':'🛵 PEDIDOS DELIVERY';
+    mesa.querySelector('small').textContent=mesaRows.length?'⚠️ AGUARDANDO ACEITE • ALERTA ATIVO':'Nenhum pedido aguardando';
+    delivery.querySelector('small').textContent=deliveryRows.length?'⚠️ AGUARDANDO ACEITE • ALERTA ATIVO':'Nenhum pedido aguardando';
   }
 
   function startFromIframe() {
@@ -120,7 +144,7 @@ window.addEventListener('DOMContentLoaded', () => {
       db=win.firebase.database();
       ensureAlerts();
       auth.onAuthStateChanged(user=>{
-        if(!user) return;
+        if(!user){stopSoundLoop();waitingCount=0;return;}
         db.ref('orders').off('value',render);
         db.ref('orders').on('value',render,err=>console.error('Akatsuky alertas:',err));
       });
