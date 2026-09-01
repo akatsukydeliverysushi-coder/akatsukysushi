@@ -84,6 +84,19 @@ window.addEventListener('DOMContentLoaded', () => {
       .akAlert>span{min-width:29px;height:29px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#292e38;font-size:15px;font-weight:900}
       .akAlert.wait{border-color:#ef1731;background:#250a10;animation:akPulse .8s infinite}
       .akAlert.wait>span{background:#ef1731;color:#fff;animation:akNumberPulse .8s infinite}
+
+      /* Destaque individual: todo pedido que ainda não foi aceito fica com a borda vermelha piscando. */
+      .order-waiting{
+        border:2px solid #ef1731 !important;
+        box-shadow:0 0 0 1px #ef173155,0 0 18px #ef173166 !important;
+        animation:akOrderWaitingBorder 1s infinite !important;
+      }
+      @keyframes akOrderWaitingBorder{
+        0%,100%{border-color:#ef1731;box-shadow:0 0 0 1px #ef173155,0 0 10px #ef173144 !important}
+        50%{border-color:transparent;box-shadow:0 0 0 3px #ef1731,0 0 30px #ef1731aa !important}
+      }
+      @media (prefers-reduced-motion:reduce){.order-waiting{animation:none !important;border-color:#ef1731 !important}}
+
       @keyframes akPulse{50%{transform:scale(1.025);box-shadow:0 0 22px #ef173188}}
       @keyframes akNumberPulse{50%{transform:scale(1.12)}}
     `;
