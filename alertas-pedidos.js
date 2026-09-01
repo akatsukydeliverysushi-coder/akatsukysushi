@@ -1,169 +1,102 @@
 (() => {
 'use strict';
 window.addEventListener('DOMContentLoaded', () => {
-  const frame = document.querySelector('iframe');
-  if (!frame) return;
+  let db=null, auth=null, previousWaiting=new Set(), firstSnapshot=true, soundTimer=null, waitingCount=0, audioCtx=null;
 
-  let previousWaiting = new Set();
-  let firstSnapshot = true;
-  let db = null;
-  let auth = null;
-  let audioCtx = null;
-  let alertSoundTimer = null;
-  let waitingCount = 0;
+  const doc=document;
+  const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-  function unlockAudio() {
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      audioCtx = audioCtx || new Ctx();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-    } catch (_) {}
-  }
-  ['click','keydown','touchstart'].forEach(type => window.addEventListener(type, unlockAudio, {passive:true}));
+  function unlockAudio(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audioCtx=audioCtx||new C();if(audioCtx.state==='suspended')audioCtx.resume()}catch(_){}}
+  ['click','keydown','pointerdown','touchstart'].forEach(e=>window.addEventListener(e,unlockAudio,{passive:true}));
+  function sound(){try{unlockAudio();if(!audioCtx)return;const t=audioCtx.currentTime;[0,.18,.36].forEach((d,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=i===1?1046:880;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.22,t+d+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d+.15);o.connect(g);g.connect(audioCtx.destination);o.start(t+d);o.stop(t+d+.17)})}catch(_){}}
 
-  function sound() {
-    try {
-      unlockAudio();
-      if (!audioCtx) return;
-      const t = audioCtx.currentTime;
-      [0,.18,.36].forEach((delay,i) => {
-        const osc=audioCtx.createOscillator(), gain=audioCtx.createGain();
-        osc.type='sine'; osc.frequency.value=i===1?880:660;
-        gain.gain.setValueAtTime(.0001,t+delay);
-        gain.gain.exponentialRampToValueAtTime(.25,t+delay+.02);
-        gain.gain.exponentialRampToValueAtTime(.0001,t+delay+.16);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(t+delay); osc.stop(t+delay+.18);
-      });
-    } catch (_) {}
+  function stopLoop(){if(soundTimer){clearInterval(soundTimer);soundTimer=null}}
+  function updateLoop(n){waitingCount=n;if(n>0&&!soundTimer)soundTimer=setInterval(()=>waitingCount?sound():stopLoop(),5000);if(!n)stopLoop()}
+
+  function isWaiting(o){const s=String(o?.status||'').trim().toLowerCase();return s==='aguardando'||s==='novo'||s==='pending'}
+  function isMesa(o){
+    const mesa=o?.mesa??o?.table??o?.numeroMesa??o?.tableNumber??o?.mesaNumero??o?.tableNumber;
+    const origem=String(o?.origem??o?.source??o?.tipo??o?.type??o?.orderType??'').toLowerCase();
+    return String(mesa??'').trim()!==''||origem.includes('mesa')||origem.includes('garcom')||origem.includes('garçom');
   }
 
-  function updateSoundLoop(count) {
-    waitingCount = Number(count || 0);
-    if (waitingCount > 0) {
-      if (!alertSoundTimer) {
-        alertSoundTimer = setInterval(() => {
-          if (waitingCount > 0) sound();
-          else stopSoundLoop();
-        }, 5000);
-      }
-    } else stopSoundLoop();
+  function installCss(){
+    if(doc.getElementById('akatsukyPendingCss'))return;
+    const s=doc.createElement('style');s.id='akatsukyPendingCss';
+    s.textContent=`
+      /* Somente o pedido pendente pisca. O bloco PEDIDOS HOJE nunca pisca. */
+      body.new-order-alert,body.new-order-flash{animation:none!important}
+      .new-order-alert .stat.red:first-child,.new-order-flash .stat.red:first-child,.new-order-flash .top{animation:none!important;transform:none!important;box-shadow:none!important}
+      .order.ak-pending-order{border:3px solid #ef1731!important;box-shadow:0 0 0 2px #ef173155,0 0 22px #ef173188!important;animation:akPendingBorder .75s infinite!important}
+      .order.ak-pending-order .status{border-color:#ef1731!important;background:#5a0712!important;color:#fff!important}
+      @keyframes akPendingBorder{0%,100%{border-color:#ef1731;box-shadow:0 0 0 2px #ef173155,0 0 12px #ef173166}50%{border-color:#ff7180;box-shadow:0 0 0 5px #ef173199,0 0 32px #ef1731dd}}
+      #akatsukyPendingAlerts{display:grid;gap:8px;margin:10px 0}
+      .akPendingBox{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #343844;border-radius:11px;background:#11141a;color:#fff;cursor:pointer}
+      .akPendingBox b{display:block;font-size:11px}.akPendingBox small{display:block;color:#9da3b0;font-size:9px;margin-top:3px}
+      .akPendingBox strong{display:flex;align-items:center;justify-content:center;min-width:32px;height:32px;border-radius:50%;background:#292e38;font-size:16px}
+      .akPendingBox.active{border-color:#ef1731;background:#260a10;animation:akBoxPulse .8s infinite}.akPendingBox.active strong{background:#ef1731}
+      @keyframes akBoxPulse{50%{box-shadow:0 0 18px #ef173188}}
+    `;doc.head.appendChild(s);
   }
 
-  function stopSoundLoop() {
-    if (alertSoundTimer) {
-      clearInterval(alertSoundTimer);
-      alertSoundTimer = null;
-    }
+  function getAlertHost(){
+    let host=doc.getElementById('akatsukyPendingAlerts');if(host)return host;
+    host=doc.createElement('div');host.id='akatsukyPendingAlerts';
+    host.innerHTML='<div id="akMesaPending" class="akPendingBox"><div><b>🍽️ PEDIDOS DE MESA</b><small>Nenhum pedido aguardando aceite</small></div><strong>0</strong></div><div id="akDeliveryPending" class="akPendingBox"><div><b>🛵 PEDIDOS DELIVERY</b><small>Nenhum pedido aguardando aceite</small></div><strong>0</strong></div>';
+    const target=doc.querySelector('.toolbar')||doc.querySelector('#orders')?.parentElement||doc.querySelector('.dashboardGrid');
+    if(target)target.parentElement.insertBefore(host,target);
+    else doc.querySelector('.wrap')?.prepend(host);
+    const open=()=>{const f=doc.getElementById('filter');if(f){f.value='todos';f.dispatchEvent(new Event('change',{bubbles:true}))}const d=doc.getElementById('dateFilter');if(d){d.value='all';d.dispatchEvent(new Event('change',{bubbles:true}))}doc.getElementById('orders')?.scrollIntoView({behavior:'smooth',block:'start'})};
+    host.querySelectorAll('.akPendingBox').forEach(x=>x.addEventListener('click',open));
+    return host;
   }
 
-  function getDoc(){try{return frame.contentDocument||frame.contentWindow.document}catch(_){return null}}
-
-  function ensureAlerts() {
-    const doc=getDoc();
-    if(!doc) return null;
-    let box=doc.getElementById('akatsukyOrderAlerts');
-    if(box) return box;
-    const logout=doc.getElementById('logout');
-    if(!logout) return null;
-    box=doc.createElement('div');
-    box.id='akatsukyOrderAlerts';
-    box.innerHTML=`
-      <div id="akMesa" class="akAlert akMesa"><div><b>🍽️ PEDIDOS DE MESA</b><small>Nenhum pedido aguardando</small></div><span>0</span></div>
-      <div id="akDelivery" class="akAlert akDelivery"><div><b>🛵 PEDIDOS DELIVERY</b><small>Nenhum pedido aguardando</small></div><span>0</span></div>`;
-    const style=doc.createElement('style');
-    style.id='akatsukyOrderAlertsStyle';
-    style.textContent=`
-      #akatsukyOrderAlerts{display:grid;gap:7px;margin-top:8px}
-      .akAlert{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 8px;border:1px solid #303540;border-radius:10px;background:#11141a;color:#fff;cursor:pointer;box-shadow:0 4px 14px #0004}
-      .akAlert b{display:block;font-size:10px;line-height:1.2}
-      .akAlert small{display:block;color:#9da3b0;font-size:9px;margin-top:3px}
-      .akAlert>span{min-width:29px;height:29px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#292e38;font-size:15px;font-weight:900}
-      .akAlert.wait{border-color:#ef1731;background:#250a10;animation:akPulse .8s infinite}
-      .akAlert.wait>span{background:#ef1731;color:#fff;animation:akNumberPulse .8s infinite}
-      /* Destaque individual do pedido que ainda nao foi aceito. */
-      .order.order-waiting{border:2px solid #ef1731!important;box-shadow:0 0 0 2px #ef173155,0 0 28px #ef173155!important;animation:akOrderWaiting 0.8s infinite!important}
-      .order.order-waiting .status{border-color:#ef1731!important;color:#fff!important;background:#5a0712!important}
-      @keyframes akPulse{50%{transform:scale(1.025);box-shadow:0 0 22px #ef173188}}
-      @keyframes akNumberPulse{50%{transform:scale(1.12)}}
-      @keyframes akOrderWaiting{0%,100%{border-color:#ef1731!important;box-shadow:0 0 0 2px #ef173155,0 0 14px #ef173155!important}50%{border-color:#ff6172!important;box-shadow:0 0 0 4px #ef173188,0 0 34px #ef1731cc!important}}
-    `;
-    doc.head.appendChild(style);
-    logout.parentElement?.appendChild(box);
-    const open=()=>{
-      const f=doc.getElementById('filter');
-      if(f){f.value='todos';f.dispatchEvent(new Event('change',{bubbles:true}))}
-      /* Mostra o pedido mesmo se o registro nao tiver createdAt valido. */
-      const d=doc.getElementById('dateFilter');
-      if(d){d.value='all';d.dispatchEvent(new Event('change',{bubbles:true}))}
-      doc.getElementById('orders')?.scrollIntoView({behavior:'smooth',block:'start'});
-    };
-    box.querySelector('#akMesa').onclick=open;
-    box.querySelector('#akDelivery').onclick=open;
-    return box;
+  function clearWrongGlobalFlash(){
+    doc.body.classList.remove('new-order-alert','new-order-flash');
+    // painel.js pode recolocar as classes; removemos continuamente sem interferir nos cards.
+    if(!clearWrongGlobalFlash.started){clearWrongGlobalFlash.started=true;setInterval(()=>doc.body.classList.remove('new-order-alert','new-order-flash'),200)}
   }
 
-  // Somente pedidos realmente aguardando aceite geram contador e alerta.
-  // 'recebido' significa que o pedido ja foi aceito.
-  function isWaiting(order) {
-    const s=String(order?.status||'').trim().toLowerCase();
-    return s==='aguardando'||s==='novo'||s==='pending';
+  function markCards(data){
+    const pending=new Set(Object.entries(data).filter(([,o])=>o&&isWaiting(o)).map(([id])=>id));
+    doc.querySelectorAll('.order[data-order-id]').forEach(card=>{
+      const id=card.getAttribute('data-order-id');
+      card.classList.toggle('ak-pending-order',pending.has(id));
+    });
+    return pending;
   }
 
-  function isMesa(order) {
-    const mesa=String(order?.mesa??order?.table??order?.numeroMesa??order?.tableNumber??'').trim();
-    const origin=String(order?.origem??order?.source??order?.tipo??order?.type??'').toLowerCase();
-    return !!mesa || origin.includes('garcom') || origin.includes('garçom') || origin.includes('mesa');
-  }
-
-  function render(snapshot) {
-    const box=ensureAlerts();
-    if(!box) return;
-    const data=snapshot.val()||{};
+  function render(data){
+    installCss();clearWrongGlobalFlash();const host=getAlertHost();if(!host)return;
     const waiting=Object.entries(data).filter(([,o])=>o&&isWaiting(o));
-    const mesaRows=waiting.filter(([,o])=>isMesa(o));
-    const deliveryRows=waiting.filter(([id])=>!mesaRows.some(([mid])=>mid===id));
-    const ids=new Set(waiting.map(([id])=>id));
-    let newOrder=false;
-    ids.forEach(id=>{if(previousWaiting.size&&!previousWaiting.has(id))newOrder=true});
-    if(!firstSnapshot&&newOrder)sound();
-    firstSnapshot=false;
-    previousWaiting=ids;
-    updateSoundLoop(waiting.length);
-
-    const mesa=box.querySelector('#akMesa'), delivery=box.querySelector('#akDelivery');
-    mesa.classList.toggle('wait',mesaRows.length>0);
-    delivery.classList.toggle('wait',deliveryRows.length>0);
-    mesa.querySelector('span').textContent=mesaRows.length;
-    delivery.querySelector('span').textContent=deliveryRows.length;
-    mesa.querySelector('b').textContent=mesaRows.length?'🔴 NOVO PEDIDO DE MESA':'🍽️ PEDIDOS DE MESA';
-    delivery.querySelector('b').textContent=deliveryRows.length?'🔴 NOVO PEDIDO DELIVERY':'🛵 PEDIDOS DELIVERY';
-    mesa.querySelector('small').textContent=mesaRows.length?'⚠️ AGUARDANDO ACEITE • ALERTA ATIVO':'Nenhum pedido aguardando';
-    delivery.querySelector('small').textContent=deliveryRows.length?'⚠️ AGUARDANDO ACEITE • ALERTA ATIVO':'Nenhum pedido aguardando';
+    const mesa=waiting.filter(([,o])=>isMesa(o));const delivery=waiting.filter(([,o])=>!isMesa(o));
+    const ids=markCards(data);
+    let fresh=false;ids.forEach(id=>{if(!firstSnapshot&&!previousWaiting.has(id))fresh=true});
+    if(fresh)sound();
+    firstSnapshot=false;previousWaiting=ids;updateLoop(waiting.length);
+    const mb=host.querySelector('#akMesaPending'),dbx=host.querySelector('#akDeliveryPending');
+    mb.classList.toggle('active',mesa.length>0);dbx.classList.toggle('active',delivery.length>0);
+    mb.querySelector('strong').textContent=mesa.length;dbx.querySelector('strong').textContent=delivery.length;
+    mb.querySelector('small').textContent=mesa.length?'⚠️ AGUARDANDO ACEITE':'Nenhum pedido aguardando aceite';
+    dbx.querySelector('small').textContent=delivery.length?'⚠️ AGUARDANDO ACEITE':'Nenhum pedido aguardando aceite';
   }
 
-  function startFromIframe() {
-    try {
-      const win=frame.contentWindow;
-      if(!win||!win.firebase) return setTimeout(startFromIframe,300);
-      auth=win.firebase.auth();
-      db=win.firebase.database();
-      ensureAlerts();
-      auth.onAuthStateChanged(user=>{
-        if(!user){stopSoundLoop();waitingCount=0;return;}
-        db.ref('orders').off('value',render);
-        db.ref('orders').on('value',render,err=>console.error('Akatsuky alertas:',err));
+  function refreshCards(){
+    if(!db)return;db.ref('orders').once('value').then(s=>render(s.val()||{})).catch(()=>{});
+  }
+
+  function start(){
+    try{
+      if(!window.firebase||!firebase.database)return setTimeout(start,500);
+      db=firebase.database();auth=firebase.auth();
+      auth.onAuthStateChanged(u=>{
+        if(!u){stopLoop();return}
+        db.ref('orders').on('value',s=>render(s.val()||{}),()=>{});
+        setInterval(refreshCards,1200);
       });
-    } catch(e) { console.error('Akatsuky alertas:',e); setTimeout(startFromIframe,500); }
+    }catch(e){setTimeout(start,700)}
   }
 
-  frame.addEventListener('load',()=>{
-    setTimeout(()=>{
-      ensureAlerts();
-      startFromIframe();
-    },100);
-  });
-  setTimeout(()=>{ensureAlerts();startFromIframe()},500);
+  installCss();getAlertHost();start();
 });
 })();
