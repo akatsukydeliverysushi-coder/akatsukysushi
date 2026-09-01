@@ -1,6 +1,6 @@
 {
   "name": "akatsuky-adm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Aplicativo Windows do Painel Administrativo Akatsuky Delivery Sushi",
   "main": "main.js",
   "author": "Akatsuky Delivery Sushi",
@@ -15,6 +15,6 @@
     "directories":{"output":"dist"},
     "files":["main.js","package.json"],
     "win":{"target":[{"target":"nsis","arch":["x64"]}],"signAndEditExecutable":false},
-    "nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true,"createDesktopShortcut":true,"createStartMenuShortcut":true,"shortcutName":"Akatsuky ADM"}
+    "nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true,"createDesktopShortcut":true,"createStartMenuShortcut":true,"shortcutName":"Akatsuky ADM","deleteAppDataOnUninstall":true}
   }
 }
