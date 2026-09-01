@@ -13,8 +13,8 @@
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator','garcom']",
       "$orderId": {
         ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator','garcom']",
-        ".write": "(!data.exists() && auth == null) || (auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator']) || (auth != null && root.child('users').child(auth.uid).child('role').val() === 'garcom' && ((!data.exists() && newData.child('origem').val() === 'garcom') || (data.exists() && data.child('origem').val() === 'garcom')))",
-        ".validate": "newData.hasChildren(['createdAt','status','customer','items','total']) && newData.child('createdAt').isNumber() && newData.child('total').isNumber() && newData.child('status').val() in ['recebido','preparando','saiu para entrega','entregue']",
+        ".write": "(!data.exists() && auth == null && newData.child('origem').val() !== 'garcom') || (auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator']) || (auth != null && root.child('users').child(auth.uid).child('role').val() === 'garcom' && ((!data.exists() && newData.child('origem').val() === 'garcom') || (data.exists() && data.child('origem').val() === 'garcom')))",
+        ".validate": "newData.hasChildren(['createdAt','status','customer','items','total']) && newData.child('createdAt').isNumber() && newData.child('total').isNumber() && newData.child('status').val() in ['recebido','preparando','saiu para entrega','entregue'] && (!newData.hasChild('origem') || newData.child('origem').val() in ['delivery','garcom'])",
         "status": {
           ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() in ['admin','operator'] || (auth != null && root.child('users').child(auth.uid).child('role').val() === 'garcom' && data.parent().child('origem').val() === 'garcom')",
           ".validate": "newData.val() in ['recebido','preparando','saiu para entrega','entregue']"
