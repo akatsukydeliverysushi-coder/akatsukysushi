@@ -8,12 +8,10 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win nsis"
-  },
-  "dependencies": {
-    "electron": "^37.0.0"
+    "dist": "electron-builder --win nsis --publish never"
   },
   "devDependencies": {
+    "electron": "^37.0.0",
     "electron-builder": "^26.0.0"
   },
   "build": {
@@ -23,25 +21,8 @@
     "directories": {
       "output": "dist"
     },
-    "files": [
-      "main.js",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        }
-      ],
-      "signAndEditExecutable": false
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Akatsuky ADM"
-    }
+    "files": ["main.js", "package.json"],
+    "win": {"target": [{"target": "nsis", "arch": ["x64"]}], "signAndEditExecutable": false},
+    "nsis": {"oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true, "shortcutName": "Akatsuky ADM"}
   }
 }
