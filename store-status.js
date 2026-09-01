@@ -7,10 +7,10 @@
     el.setAttribute('role','status');
     el.textContent = '🟢 LOJA ABERTA';
     Object.assign(el.style, {
-      position:'fixed', top:'12px', left:'50%', transform:'translateX(-50%)',
-      zIndex:'9999', padding:'9px 18px', borderRadius:'999px',
-      fontWeight:'800', fontSize:'14px', letterSpacing:'.3px',
-      border:'1px solid rgba(255,255,255,.2)', boxShadow:'0 8px 25px rgba(0,0,0,.35)',
+      position:'fixed', top:'62px', left:'8px', transform:'none',
+      zIndex:'9999', padding:'4px 8px', borderRadius:'999px',
+      fontWeight:'800', fontSize:'10px', letterSpacing:'.2px',
+      border:'1px solid rgba(255,255,255,.2)', boxShadow:'0 4px 12px rgba(0,0,0,.25)',
       color:'#fff', background:'#16a34a', backdropFilter:'blur(8px)',
       cursor:'default', textAlign:'center'
     });
