@@ -48,9 +48,7 @@ window.addEventListener('DOMContentLoaded', () => {
           else stopSoundLoop();
         }, 5000);
       }
-    } else {
-      stopSoundLoop();
-    }
+    } else stopSoundLoop();
   }
 
   function stopSoundLoop() {
@@ -84,27 +82,21 @@ window.addEventListener('DOMContentLoaded', () => {
       .akAlert>span{min-width:29px;height:29px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#292e38;font-size:15px;font-weight:900}
       .akAlert.wait{border-color:#ef1731;background:#250a10;animation:akPulse .8s infinite}
       .akAlert.wait>span{background:#ef1731;color:#fff;animation:akNumberPulse .8s infinite}
-
-      /* Destaque individual: todo pedido que ainda não foi aceito fica com a borda vermelha piscando. */
-      .order-waiting{
-        border:2px solid #ef1731 !important;
-        box-shadow:0 0 0 1px #ef173155,0 0 18px #ef173166 !important;
-        animation:akOrderWaitingBorder 1s infinite !important;
-      }
-      @keyframes akOrderWaitingBorder{
-        0%,100%{border-color:#ef1731;box-shadow:0 0 0 1px #ef173155,0 0 10px #ef173144 !important}
-        50%{border-color:transparent;box-shadow:0 0 0 3px #ef1731,0 0 30px #ef1731aa !important}
-      }
-      @media (prefers-reduced-motion:reduce){.order-waiting{animation:none !important;border-color:#ef1731 !important}}
-
+      /* Destaque individual do pedido que ainda nao foi aceito. */
+      .order.order-waiting{border:2px solid #ef1731!important;box-shadow:0 0 0 2px #ef173155,0 0 28px #ef173155!important;animation:akOrderWaiting 0.8s infinite!important}
+      .order.order-waiting .status{border-color:#ef1731!important;color:#fff!important;background:#5a0712!important}
       @keyframes akPulse{50%{transform:scale(1.025);box-shadow:0 0 22px #ef173188}}
       @keyframes akNumberPulse{50%{transform:scale(1.12)}}
+      @keyframes akOrderWaiting{0%,100%{border-color:#ef1731!important;box-shadow:0 0 0 2px #ef173155,0 0 14px #ef173155!important}50%{border-color:#ff6172!important;box-shadow:0 0 0 4px #ef173188,0 0 34px #ef1731cc!important}}
     `;
     doc.head.appendChild(style);
     logout.parentElement?.appendChild(box);
     const open=()=>{
       const f=doc.getElementById('filter');
       if(f){f.value='todos';f.dispatchEvent(new Event('change',{bubbles:true}))}
+      /* Mostra o pedido mesmo se o registro nao tiver createdAt valido. */
+      const d=doc.getElementById('dateFilter');
+      if(d){d.value='all';d.dispatchEvent(new Event('change',{bubbles:true}))}
       doc.getElementById('orders')?.scrollIntoView({behavior:'smooth',block:'start'});
     };
     box.querySelector('#akMesa').onclick=open;
@@ -113,7 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   // Somente pedidos realmente aguardando aceite geram contador e alerta.
-  // 'recebido' significa que o pedido já foi aceito e não deve mais alertar.
+  // 'recebido' significa que o pedido ja foi aceito.
   function isWaiting(order) {
     const s=String(order?.status||'').trim().toLowerCase();
     return s==='aguardando'||s==='novo'||s==='pending';
