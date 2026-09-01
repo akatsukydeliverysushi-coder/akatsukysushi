@@ -1,8 +1,30 @@
 const { app, BrowserWindow, shell, session, dialog } = require('electron');
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 const PANEL_URL = 'https://akatsukydeliverysushi-coder.github.io/akatsukysushi/painel.html';
 const VERSION_URL = 'https://raw.githubusercontent.com/akatsukydeliverysushi-coder/akatsukysushi/main/desktop/version.json';
+const CLEAN_MARKER = 'akatsuky-clean-install-v1';
+
+async function cleanLocalDataOnFirstRun() {
+  const markerPath = path.join(app.getPath('userData'), CLEAN_MARKER);
+  if (fs.existsSync(markerPath)) return;
+
+  try {
+    await session.defaultSession.clearStorageData({
+      storages: ['appcache', 'cookies', 'filesystem', 'indexdb', 'localstorage', 'shadercache', 'websql', 'serviceworkers', 'cachestorage']
+    });
+  } catch (error) {
+    console.warn('Limpeza local inicial:', error.message);
+  }
+
+  try {
+    fs.writeFileSync(markerPath, new Date().toISOString(), 'utf8');
+  } catch (error) {
+    console.warn('Marcador de instalacao limpa:', error.message);
+  }
+}
 
 function checkForUpdate() {
   return new Promise((resolve) => {
@@ -67,6 +89,7 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  await cleanLocalDataOnFirstRun();
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   await checkForUpdate();
   createWindow();
