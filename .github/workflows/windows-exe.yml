@@ -1,0 +1,36 @@
+name: Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Gerar instalador EXE
+        run: npm run dist
+
+      - name: Publicar EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Akatsuky-Sushi-Windows
+          path: desktop/dist/*
+          if-no-files-found: error
+          retention-days: 30
