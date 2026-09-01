@@ -1,0 +1,12 @@
+ETAPA DE SEGURANCA DO DELIVERY
+
+Objetivo: proteger pedidos sem quebrar o envio atual.
+
+1. O Delivery deve autenticar anonimamente cada sessao.
+2. Cada novo pedido deve receber ownerUid = auth.uid.
+3. O acompanhamento deve usar orders/<pedidoId> e validar que ownerUid pertence ao usuario autenticado.
+4. A leitura publica de orders deve ser removida somente depois que todos os clientes estiverem gravando ownerUid.
+5. ADM continua com acesso administrativo.
+6. Garcom continua usando role=garcom.
+
+IMPORTANTE: esta etapa e documentacao de transicao. Nao alterar as Rules finais ate o codigo do Delivery estar migrado e testado.
