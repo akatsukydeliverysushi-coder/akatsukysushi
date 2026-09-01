@@ -1,0 +1,38 @@
+name: Build Akatsuky ADM
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-adm.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: desktop/package.json
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Gerar instalador Windows
+        run: npm run dist
+
+      - name: Publicar instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: Akatsuky-ADM-Windows
+          path: desktop/dist/Akatsuky-ADM-Setup-*.exe
+          if-no-files-found: error
