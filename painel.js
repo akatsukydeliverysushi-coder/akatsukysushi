@@ -27,3 +27,14 @@ async function saveRules(){const a=Math.max(0,Number($('feeAguas').value||0)),o=
 function bind(){$('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};$('logout').onclick=()=>firebase.auth().signOut();$('refresh').onclick=render;$('topRefresh').onclick=render;$('backBtn').onclick=goBack;$('search').oninput=render;$('filter').onchange=render;$('dateFilter').onchange=render;$('toggleStore').onclick=toggleStore;$('saveRules').onclick=saveRules;$('menuBtn').onclick=()=>$('sidebar').classList.toggle('open');$('orders').onclick=e=>{const s=e.target.closest('[data-status]');if(s)status(s.dataset.id,s.dataset.status);const p=e.target.closest('[data-print]');if(p)printOrder(p.dataset.print)}}
 window.addEventListener('DOMContentLoaded',()=>{bind();init()});
 })();
+
+// Integração do menu Clientes sem substituir o painel HTML.
+window.addEventListener('DOMContentLoaded',()=>{
+  const nav=document.querySelector('.nav');
+  if(!nav || nav.querySelector('[data-clientes-link]')) return;
+  const link=document.createElement('a');
+  link.href='clientes.html';
+  link.dataset.clientesLink='1';
+  link.innerHTML='👥 <span>Clientes</span>';
+  nav.insertBefore(link,nav.children[1]||null);
+});
