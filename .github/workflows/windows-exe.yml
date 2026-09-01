@@ -1,0 +1,86 @@
+name: Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        shell: pwsh
+        run: |
+          if (Test-Path package-lock.json) {
+            npm ci
+          } elseif (Test-Path package.json) {
+            npm install
+          } else {
+            Write-Host 'Sem package.json; preparando aplicativo web para empacotamento.'
+          }
+
+      - name: Verificar Electron
+        shell: pwsh
+        run: |
+          if (Test-Path package.json) {
+            $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+            if (-not $pkg.devDependencies.electron -and -not $pkg.dependencies.electron) {
+              npm install --save-dev electron electron-builder
+            }
+          } else {
+            npm init -y
+            npm install --save-dev electron electron-builder
+          }
+
+      - name: Criar entrada Electron
+        shell: pwsh
+        run: |
+          if (-not (Test-Path electron-main.cjs)) {
+            @'
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+function createWindow() {
+  const win = new BrowserWindow({ width: 1440, height: 900, minWidth: 1100, minHeight: 700, webPreferences: { contextIsolation: true, nodeIntegration: false } });
+  win.loadFile(path.join(__dirname, 'index.html'));
+}
+app.whenReady().then(() => { createWindow(); app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); }); });
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+'@ | Set-Content -Encoding UTF8 electron-main.cjs
+          }
+
+      - name: Configurar package.json para Electron Builder
+        shell: pwsh
+        run: |
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $pkg.main = 'electron-main.cjs'
+          $pkg.scripts = [pscustomobject]@{ dist = 'electron-builder --win --x64' }
+          $pkg.build = [pscustomobject]@{
+            appId = 'br.com.akatsuky.sushi'
+            productName = 'Akatsuky Sushi'
+            directories = [pscustomobject]@{ output = 'dist-exe' }
+            files = @('**/*', '!dist-exe/**', '!.git/**', '!.github/**')
+            win = [pscustomobject]@{ target = @([pscustomobject]@{ target = 'nsis'; arch = @('x64') }, [pscustomobject]@{ target = 'portable'; arch = @('x64') }) }
+            nsis = [pscustomobject]@{ oneClick = $false; allowToChangeInstallationDirectory = $true }
+          }
+          $pkg | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 package.json
+
+      - name: Gerar EXE
+        run: npm run dist
+
+      - name: Publicar EXE como Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Akatsuky-Sushi-Windows
+          path: dist-exe/*
+          if-no-files-found: error
+          retention-days: 30
