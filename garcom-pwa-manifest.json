@@ -1,0 +1,17 @@
+{
+  "name": "Akatsuky Garçom",
+  "short_name": "Akatsuky Garçom",
+  "description": "Aplicativo do garçom Akatsuky Delivery Sushi",
+  "start_url": "./garcom.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "lang": "pt-BR",
+  "categories": ["food", "business"],
+  "icons": [
+    { "src": "logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
