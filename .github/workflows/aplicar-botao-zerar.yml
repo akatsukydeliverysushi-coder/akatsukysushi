@@ -1,0 +1,47 @@
+name: Aplicar botão Zerar
+
+on:
+  push:
+    paths:
+      - .github/workflows/aplicar-botao-zerar.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Aplicar proteção de limpeza no painel ADM
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib
+
+          p = Path('painel.js')
+          text = p.read_text(encoding='utf-8')
+
+          marker = "function msg(text,err=false){$('connection').textContent=text;$('connection').className='notice'+(err?' err':'')}"
+          if 'function ensureMasterResetButton()' not in text:
+              password_hash = hashlib.sha256('AKT@2026#Zerar'.encode()).hexdigest()
+              fn = f'''\nfunction ensureMasterResetButton(){{\n  if(document.getElementById('masterResetBtn'))return;\n  const btn=document.createElement('button');\n  btn.id='masterResetBtn';\n  btn.type='button';\n  btn.textContent='🧹 ZERAR ESTE PC';\n  btn.style.cssText='width:100%;margin-top:8px;padding:11px 10px;border:1px solid #8b2737;border-radius:10px;background:#210d12;color:#ff9dab;font-weight:900;cursor:pointer';\n  const nav=document.querySelector('.nav');\n  const logout=document.getElementById('logout');\n  if(logout&&logout.parentElement) logout.parentElement.appendChild(btn); else if(nav) nav.appendChild(btn);\n  btn.addEventListener('click',async()=>{{\n    const senha=prompt('🔐 SENHA MESTRE\\nDigite a senha para zerar os dados locais deste PC:');\n    if(senha===null)return;\n    const enc=new TextEncoder().encode(senha);\n    const digest=await crypto.subtle.digest('SHA-256',enc);\n    const hash=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');\n    if(hash!=='{password_hash}'){{alert('❌ Senha mestre incorreta.');return}}\n    if(!confirm('⚠️ CONFIRMAÇÃO FINAL\\n\\nIsso vai limpar somente os dados locais deste computador, sessão do painel, cache e configurações locais.\\n\\nOs pedidos, clientes e cardápio do Firebase NÃO serão apagados.\\n\\nDeseja continuar?'))return;\n    try{{\n      try{{if(window.firebase?.auth)await firebase.auth().signOut()}}catch(e){{}}\n      localStorage.clear();\n      sessionStorage.clear();\n      if('caches' in window){{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}\n      if('indexedDB' in window && indexedDB.databases){{const dbs=await indexedDB.databases();for(const d of dbs)if(d.name)try{{indexedDB.deleteDatabase(d.name)}}catch(e){{}}}}\n      if(navigator.serviceWorker){{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.unregister()))}}\n      alert('✅ PC zerado. A página será recarregada.');\n      location.reload();\n    }}catch(e){{console.error(e);alert('Não foi possível concluir a limpeza completa. Feche e abra o navegador novamente.')}}\n  }});\n}}\n'''
+              text = text.replace(marker, marker + fn, 1)
+
+          show_marker = "function showApp(role){$('login').classList.add('hidden');$('app').classList.remove('hidden');"
+          if 'ensureMasterResetButton();' not in text:
+              text = text.replace(show_marker, show_marker + 'ensureMasterResetButton();', 1)
+
+          p.write_text(text, encoding='utf-8')
+
+      - name: Gravar alteração no GitHub
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add painel.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Adicionar botão Zerar PC protegido por senha mestre"
+          git push
