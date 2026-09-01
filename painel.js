@@ -28,13 +28,23 @@ function bind(){$('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key
 window.addEventListener('DOMContentLoaded',()=>{bind();init()});
 })();
 
-// Integração do menu Clientes sem substituir o painel HTML.
+// Integração do menu Clientes e Sorteios sem substituir o painel HTML.
 window.addEventListener('DOMContentLoaded',()=>{
   const nav=document.querySelector('.nav');
-  if(!nav || nav.querySelector('[data-clientes-link]')) return;
-  const link=document.createElement('a');
-  link.href='clientes.html';
-  link.dataset.clientesLink='1';
-  link.innerHTML='👥 <span>Clientes</span>';
-  nav.insertBefore(link,nav.children[1]||null);
+  if(!nav) return;
+  if(!nav.querySelector('[data-clientes-link]')){
+    const link=document.createElement('a');
+    link.href='clientes.html';
+    link.dataset.clientesLink='1';
+    link.innerHTML='👥 <span>Clientes</span>';
+    nav.insertBefore(link,nav.children[1]||null);
+  }
+  if(!nav.querySelector('[data-sorteios-link]')){
+    const link=document.createElement('a');
+    link.href='sorteios.html';
+    link.dataset.sorteiosLink='1';
+    link.innerHTML='🎉 <span>Sorteios</span>';
+    const clientLink=nav.querySelector('[data-clientes-link]');
+    nav.insertBefore(link,clientLink?clientLink.nextSibling:null);
+  }
 });
