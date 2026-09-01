@@ -6,6 +6,8 @@
   let patched = false;
   let lastAddressKey = '';
   const listeners = new Set();
+  let lastAutoCep = '';
+  let autoCepTimer = null;
 
   const normalize = value => String(value || '')
     .normalize('NFD')
@@ -45,6 +47,65 @@
       el.addEventListener('change', () => notify(true));
     });
     notify(true);
+  }
+
+  async function autoLookupCep() {
+    const cepEl = document.getElementById('cep');
+    if (!cepEl) return;
+    const cep = String(cepEl.value || '').replace(/\D/g, '');
+    if (cep.length !== 8) {
+      lastAutoCep = '';
+      return;
+    }
+    if (cep === lastAutoCep) return;
+    lastAutoCep = cep;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      if (!response.ok) throw new Error('Falha na consulta');
+      const data = await response.json();
+      if (data.erro) throw new Error('CEP não encontrado');
+
+      const values = {
+        street: data.logradouro || '',
+        neighborhood: data.bairro || '',
+        city: data.localidade || '',
+        uf: data.uf || ''
+      };
+      Object.entries(values).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.value = value;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      notify(true);
+    } catch (e) {
+      console.warn('Consulta automática de CEP:', e.message || e);
+    }
+  }
+
+  function bindAutoCep() {
+    const cep = document.getElementById('cep');
+    if (!cep || cep.dataset.autoCepBound) return;
+    cep.dataset.autoCepBound = '1';
+
+    const button = document.getElementById('searchCep');
+    if (button) button.style.display = 'none';
+
+    const trigger = () => {
+      clearTimeout(autoCepTimer);
+      const digits = String(cep.value || '').replace(/\D/g, '');
+      if (digits.length !== 8) {
+        lastAutoCep = '';
+        return;
+      }
+      autoCepTimer = setTimeout(autoLookupCep, 250);
+    };
+
+    cep.addEventListener('input', trigger);
+    trigger();
   }
 
   function normalizeRules(value) {
@@ -88,18 +149,21 @@
   function start() {
     if (!patchFirebase()) setTimeout(start, 100);
     bindAddress();
+    bindAutoCep();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     bindAddress();
+    bindAutoCep();
     setTimeout(bindAddress, 300);
+    setTimeout(bindAutoCep, 300);
     setTimeout(bindAddress, 1000);
-    // O Buscar CEP preenche os campos via JavaScript, sem disparar input/change.
-    // Esta verificação detecta a cidade/UF preenchidas e atualiza a taxa automaticamente.
+    setTimeout(bindAutoCep, 1000);
     setInterval(() => {
       bindAddress();
+      bindAutoCep();
       notify(false);
-    }, 300);
+    }, 500);
   });
 
   start();
