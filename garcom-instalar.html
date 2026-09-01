@@ -22,7 +22,7 @@
 </div>
 <script>
 let deferredPrompt=null;
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./garcom-sw.js',{scope:'./'}).catch(()=>{})}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{})}
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
 const btn=document.getElementById('installBtn');
 btn.addEventListener('click',async()=>{
