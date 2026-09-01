@@ -9,6 +9,20 @@ window.AKATSUKY_FIREBASE_CONFIG = {
   measurementId: "G-L7DE6BM973"
 };
 
+// Mantém a autenticação isolada por aba/janela.
+// Isso evita que ADM e Garçom compartilhem a mesma sessão quando
+// os dois painéis são usados no mesmo navegador para testes.
+(function(){
+  try{
+    if(window.firebase && typeof firebase.auth === 'function'){
+      const auth=firebase.auth();
+      auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .then(()=>console.log('AKATSUKY: persistência de autenticação SESSION configurada.'))
+        .catch(e=>console.warn('AKATSUKY: falha ao configurar SESSION:',e));
+    }
+  }catch(e){console.warn('AKATSUKY: erro na configuração da persistência:',e)}
+})();
+
 // Gate de autenticação do Garçom. A autorização definitiva é feita pelas Firebase Rules.
 (function(){
   if(!/\/garcom\.html(?:$|\?)/.test(location.pathname)) return;
@@ -28,6 +42,7 @@ window.AKATSUKY_FIREBASE_CONFIG = {
       await load(base+'firebase-database-compat.js');
       const app=firebase.apps.length?firebase.app():firebase.initializeApp(window.AKATSUKY_FIREBASE_CONFIG);
       const auth=app.auth(), db=app.database();
+      await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
       document.getElementById('garcomLogin').onclick=async function(){
         const email=document.getElementById('garcomEmail').value.trim(), password=document.getElementById('garcomPassword').value;
         if(!email||!password){msg('Informe e-mail e senha.');return}
