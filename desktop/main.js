@@ -76,6 +76,9 @@ function createWindow() {
   win.loadURL(PANEL_URL, { userAgent: `AkatsukyADM/${app.getVersion()}` });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
+    // A impressão da comanda usa uma janela about:blank criada pelo painel.
+    // Permitir esse popup mantém o fluxo de impressão funcionando no EXE.
+    if (url === 'about:blank') return { action: 'allow' };
     if (url.startsWith('https://') || url.startsWith('http://')) shell.openExternal(url);
     return { action: 'deny' };
   });
