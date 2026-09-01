@@ -33,12 +33,45 @@ jobs:
         shell: pwsh
         run: npm install --save-dev electron electron-builder
 
-      - name: Criar entrada Electron
+      - name: Criar entrada Electron com instalacao limpa
         shell: pwsh
         run: |
           @'
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
+
+const CLEAN_MARKER = 'akatsuky-clean-install-v1';
+
+async function cleanLocalDataOnFirstRun() {
+  const markerPath = path.join(app.getPath('userData'), CLEAN_MARKER);
+  const fs = require('fs');
+
+  if (fs.existsSync(markerPath)) return;
+
+  try {
+    await session.defaultSession.clearStorageData({
+      storages: [
+        'appcache',
+        'cookies',
+        'filesystem',
+        'indexdb',
+        'localstorage',
+        'shadercache',
+        'websql',
+        'serviceworkers',
+        'cachestorage'
+      ]
+    });
+  } catch (error) {
+    console.warn('Nao foi possivel limpar todo o armazenamento local:', error.message);
+  }
+
+  try {
+    fs.writeFileSync(markerPath, new Date().toISOString(), 'utf8');
+  } catch (error) {
+    console.warn('Nao foi possivel gravar o marcador de instalacao limpa:', error.message);
+  }
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -54,7 +87,8 @@ function createWindow() {
   win.loadFile(path.join(__dirname, 'index.html'));
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await cleanLocalDataOnFirstRun();
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -86,6 +120,7 @@ app.on('window-all-closed', () => {
             nsis = [pscustomobject]@{
               oneClick = $false
               allowToChangeInstallationDirectory = $true
+              deleteAppDataOnUninstall = $true
             }
           }
           $pkg | ConvertTo-Json -Depth 20 | Set-Content -Encoding UTF8 package.json
