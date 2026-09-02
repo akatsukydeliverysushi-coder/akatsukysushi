@@ -37,8 +37,10 @@ jobs:
           new = "function payment(v){v=String(v||'').toLowerCase();if(v.includes('pix'))return 'PIX';if(v.includes('misto'))return 'Misto';if(v.includes('crédito')||v.includes('credito')||v.includes('cartão')||v.includes('cartao'))return 'Cartão';if(v.includes('débito')||v.includes('debito'))return 'Débito';return 'Dinheiro'}\nfunction orderPayment(o){const c=o?.customer||{};if(c.payment)return payment(c.payment);const ps=Array.isArray(o?.pagamentos)?o.pagamentos:[];if(ps.length===1)return payment(ps[0]?.forma);if(ps.length>1)return 'Misto';return 'Dinheiro'}"
           if old in s:
               s = s.replace(old, new, 1)
+          s = s.replace("if(c.payment)return orderPayment(o);", "if(c.payment)return payment(c.payment);")
           s = s.replace("payment(o.customer?.payment)", "orderPayment(o)")
           s = s.replace("payment(c.payment)", "orderPayment(o)")
+          s = s.replace("if(c.payment)return orderPayment(o);", "if(c.payment)return payment(c.payment);")
           p.write_text(s, encoding='utf-8')
           PY
       - name: Commitar alteracoes
@@ -48,5 +50,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add garcom.html painel.js
           if git diff --cached --quiet; then echo "Nenhuma alteracao necessaria"; exit 0; fi
-          git commit -m "Sincronizar forma de pagamento do Garcom com ADM"
+          git commit -m "Corrigir sincronizacao de pagamento do Garcom"
           git push
