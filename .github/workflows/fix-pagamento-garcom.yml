@@ -29,7 +29,7 @@ jobs:
           new = "const formas=[...new Set(pagamentos.map(p=>p.forma))];const formaConta=formas.length===1?formas[0]:'misto';ps.forEach(p=>{u[`orders/${p.id}/customer/payment`]=formaConta;u[`orders/${p.id}/formaPagamento`]=formaConta;});await update(ref(db),u);$('modal').style.display='none';pagamentos=[];cart=[];mesa=null;"
           if old in s:
               s = s.replace(old, new, 1)
-          # Corrige uma duplicacao criada na primeira execucao da automacao.
+          # Remove exatamente a duplicacao introduzida na primeira correcao.
           dup = "const formas=[...new Set(pagamentos.map(p=>p.forma))];const formaConta=formas.length===1?formas[0]:'misto';ps.forEach(p=>{u[`orders/${p.id}/customer/payment`]=formaConta;u[`orders/${p.id}/formaPagamento`]=formaConta;});const formas=[...new Set(pagamentos.map(p=>p.forma))];const formaConta=formas.length===1?formas[0]:'misto';ps.forEach(p=>{u[`orders/${p.id}/customer/payment`]=formaConta;u[`orders/${p.id}/formaPagamento`]=formaConta;});"
           single = "const formas=[...new Set(pagamentos.map(p=>p.forma))];const formaConta=formas.length===1?formas[0]:'misto';ps.forEach(p=>{u[`orders/${p.id}/customer/payment`]=formaConta;u[`orders/${p.id}/formaPagamento`]=formaConta;});"
           s = s.replace(dup, single, 1)
